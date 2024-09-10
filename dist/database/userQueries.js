@@ -12,16 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const userQueries_1 = require("../database/userQueries");
-const userRoutes = express_1.default.Router();
-userRoutes.post("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { username, email, password, salt, jwtrefresh } = req.body;
-    try {
-        yield (0, userQueries_1.insertUser)(username, email, password, salt, jwtrefresh);
-    }
-    catch (error) {
-        console.error(error);
-    }
-}));
-exports.default = userRoutes;
+exports.insertUser = void 0;
+const pool_1 = __importDefault(require("./pool"));
+/* async function insertUsername(username, password) {
+    await db.query("INSERT INTO accounts (username, password) VALUES ($1, $2)", [username, password]);
+} */
+const insertUser = (username, email, password, salt, jwtrefresh) => __awaiter(void 0, void 0, void 0, function* () {
+    yield pool_1.default.query("INSERT INTO users (username, email, password, salt, jwtrefresh) VALUES ($1, $2, $3, $4, $5)", [username, email, password, salt, jwtrefresh]);
+});
+exports.insertUser = insertUser;
