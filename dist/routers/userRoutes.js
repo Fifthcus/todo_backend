@@ -14,14 +14,32 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const userQueries_1 = require("../database/userQueries");
+const encryptDecryptPassword_1 = require("../utilities/encryptDecryptPassword");
 const userRoutes = express_1.default.Router();
-userRoutes.post("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { username, email, password, salt, jwtrefresh } = req.body;
+//Sign In
+/* userRoutes.post("/signin", async (req, res) => {
+    const {username, email, password, salt, jwtrefresh} = req.body;
+    const hashPassword = encrypt(password);
+    try{
+        await insertUser(username, email, password, salt, jwtrefresh);
+    }catch(error){
+        console.error(error);
+    }
+}); */
+//Sign Up
+userRoutes.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { username, email, password, jwtrefresh } = req.body;
+    const hashPassword = yield (0, encryptDecryptPassword_1.encrypt)(password);
     try {
-        yield (0, userQueries_1.insertUser)(username, email, password, salt, jwtrefresh);
+        yield (0, userQueries_1.insertUser)(username, email, hashPassword.hashedPassword, hashPassword.salt, jwtrefresh);
+        res.status(201).json({ username, email });
     }
     catch (error) {
         console.error(error);
+        if (error.code === "23505") {
+            res.status(400).json({ message: "Account already exist." });
+        }
+        res.status(400).json({ message: "Error creating account." });
     }
 }));
 exports.default = userRoutes;
