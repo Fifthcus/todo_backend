@@ -5,7 +5,7 @@ import {generate} from "../utilities/auth"
 
 const userRoutes = express.Router();
 
-//Sign In
+//Sign In example code.
 /* userRoutes.post("/signin", async (req, res) => {
     const {username, email, password, salt, jwtrefresh} = req.body;
     const hashPassword = encrypt(password);
@@ -16,10 +16,12 @@ const userRoutes = express.Router();
     }
 }); */
 
-//Sign Up
+//Sign In
 userRoutes.get("/", async (req, res) => {
     console.log(req.headers);
 });
+
+//Sign Up
 userRoutes.post("/", async (req, res) => {
     const {username, email, password} = req.body;
     const hashPassword = await encrypt(password);
