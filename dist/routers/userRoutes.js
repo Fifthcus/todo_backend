@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const userQueries_1 = require("../database/userQueries");
 const encryptDecryptPassword_1 = require("../utilities/encryptDecryptPassword");
+const auth_1 = require("../utilities/auth");
 const userRoutes = express_1.default.Router();
 //Sign In
 /* userRoutes.post("/signin", async (req, res) => {
@@ -27,19 +28,25 @@ const userRoutes = express_1.default.Router();
     }
 }); */
 //Sign Up
-userRoutes.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { username, email, password, jwtrefresh } = req.body;
+userRoutes.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(req.headers);
+}));
+userRoutes.post("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { username, email, password } = req.body;
     const hashPassword = yield (0, encryptDecryptPassword_1.encrypt)(password);
     try {
-        yield (0, userQueries_1.insertUser)(username, email, hashPassword.hashedPassword, hashPassword.salt, jwtrefresh);
-        res.status(201).json({ username, email });
+        const jwtToken = (0, auth_1.generate)({ email }, "10m");
+        const jwtRefreshToken = (0, auth_1.generate)({ email }, "24h");
+        yield (0, userQueries_1.insertUser)(username, email, hashPassword.hashedPassword, hashPassword.salt, jwtRefreshToken);
+        res.cookie("userAuth", jwtToken, { httpOnly: true });
+        res.cookie("userAuthRefresh", jwtRefreshToken, { httpOnly: true });
+        return res.status(201).json({ username, email });
     }
     catch (error) {
-        console.error(error);
         if (error.code === "23505") {
-            res.status(400).json({ message: "Account already exist." });
+            return res.status(400).json({ message: "Account already exist." });
         }
-        res.status(400).json({ message: "Error creating account." });
+        return res.status(400).json({ message: "Error creating account." });
     }
 }));
 exports.default = userRoutes;

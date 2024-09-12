@@ -1,6 +1,7 @@
 import express from "express";
 import {insertUser} from "../database/userQueries"
 import {encrypt, decrypt} from "../utilities/encryptDecryptPassword"
+import {generate} from "../utilities/auth"
 
 const userRoutes = express.Router();
 
@@ -16,18 +17,24 @@ const userRoutes = express.Router();
 }); */
 
 //Sign Up
-userRoutes.post("/signup", async (req, res) => {
-    const {username, email, password, jwtrefresh} = req.body;
+userRoutes.get("/", async (req, res) => {
+    console.log(req.headers);
+});
+userRoutes.post("/", async (req, res) => {
+    const {username, email, password} = req.body;
     const hashPassword = await encrypt(password);
     try{
-        await insertUser(username, email, hashPassword.hashedPassword, hashPassword.salt, jwtrefresh);
-        res.status(201).json({username, email});
+        const jwtToken = generate({email}, "10m");
+        const jwtRefreshToken = generate({email}, "24h");
+        await insertUser(username, email, hashPassword.hashedPassword, hashPassword.salt, jwtRefreshToken);
+        res.cookie("userAuth", jwtToken, {httpOnly: true});
+        res.cookie("userAuthRefresh", jwtRefreshToken, {httpOnly: true});
+        return res.status(201).json({username, email});
     }catch(error: any){
-        console.error(error);
         if(error.code === "23505"){
-            res.status(400).json({message: "Account already exist."});
+            return res.status(400).json({message: "Account already exist."});
         }
-        res.status(400).json({message: "Error creating account."});
+        return res.status(400).json({message: "Error creating account."});
     }
 });
 
