@@ -17,22 +17,26 @@ const userQueries_1 = require("../database/userQueries");
 const encryptDecryptPassword_1 = require("../utilities/encryptDecryptPassword");
 const auth_1 = require("../utilities/auth");
 const userRoutes = express_1.default.Router();
-//Sign In example code.
-/* userRoutes.post("/signin", async (req, res) => {
-    const {username, email, password, salt, jwtrefresh} = req.body;
-    const hashPassword = encrypt(password);
-    try{
-        await insertUser(username, email, password, salt, jwtrefresh);
-    }catch(error){
-        console.error(error);
-    }
-}); */
 //Sign In
-userRoutes.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.headers);
+userRoutes.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email, password } = req.body;
+    try {
+        //Search for user in database, and if not return error.
+        const user = yield (0, userQueries_1.getUserByEmail)(email);
+        if (!user) {
+            return res.status(404).json({ message: "Account does not exist." });
+        }
+        if (user) {
+            return res.status(200).json({ message: "Signing in." });
+        }
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "An unknown error occured." });
+    }
 }));
 //Sign Up
-userRoutes.post("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRoutes.post("/singup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { username, email, password } = req.body;
     const hashPassword = yield (0, encryptDecryptPassword_1.encrypt)(password);
     try {

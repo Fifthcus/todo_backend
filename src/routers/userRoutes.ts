@@ -1,28 +1,30 @@
 import express from "express";
-import {insertUser} from "../database/userQueries"
+import {getUserByEmail, insertUser} from "../database/userQueries"
 import {encrypt, decrypt} from "../utilities/encryptDecryptPassword"
 import {generate} from "../utilities/auth"
 
 const userRoutes = express.Router();
 
-//Sign In example code.
-/* userRoutes.post("/signin", async (req, res) => {
-    const {username, email, password, salt, jwtrefresh} = req.body;
-    const hashPassword = encrypt(password);
+//Sign In
+userRoutes.post("/signin", async (req, res) => {
+    const {email, password} = req.body;
     try{
-        await insertUser(username, email, password, salt, jwtrefresh);
+        //Search for user in database, and if not return error.
+        const user = await getUserByEmail(email);
+        if(!user){
+            return res.status(404).json({message: "Account does not exist."});
+        }
+        if(user){
+            return res.status(200).json({message: "Signing in."});
+        }
     }catch(error){
         console.error(error);
+        return res.status(500).json({message: "An unknown error occured."});
     }
-}); */
-
-//Sign In
-userRoutes.get("/", async (req, res) => {
-    console.log(req.headers);
 });
 
 //Sign Up
-userRoutes.post("/", async (req, res) => {
+userRoutes.post("/singup", async (req, res) => {
     const {username, email, password} = req.body;
     const hashPassword = await encrypt(password);
     try{

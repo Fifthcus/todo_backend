@@ -7,3 +7,8 @@ import db from "./pool"
 export const insertUser = async (username: string, email: string, password: string, salt: string, jwtrefresh: string) => {
     await db.query("INSERT INTO users (username, email, password, salt, jwtrefresh) VALUES ($1, $2, $3, $4, $5)", [username, email, password, salt, jwtrefresh]);
 }
+
+export const getUserByEmail = async (email: string) => {
+    const {rows} = await db.query("SELECT * FROM users WHERE email = ($1)", [email]);
+    return rows[0];
+}
