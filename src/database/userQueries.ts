@@ -10,5 +10,10 @@ export const insertUser = async (username: string, email: string, password: stri
 
 export const getUserByEmail = async (email: string) => {
     const {rows} = await db.query("SELECT * FROM users WHERE email = ($1)", [email]);
+    console.log(rows[0]);
     return rows[0];
+}
+
+export const updateUserJwtRefresh = async (id: number, jwtrefresh: string,) => {
+    await db.query("UPDATE users SET jwtrefresh = ($1) WHERE id = ($2)", [jwtrefresh, id]);
 }

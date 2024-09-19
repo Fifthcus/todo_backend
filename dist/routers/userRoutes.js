@@ -27,7 +27,16 @@ userRoutes.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
             return res.status(404).json({ message: "Account does not exist." });
         }
         if (user) {
-            return res.status(200).json({ message: "Signing in." });
+            //Compare password with hashed password.
+            if (yield (0, encryptDecryptPassword_1.decrypt)(user.password, password, user.salt)) {
+                const jwtToken = (0, auth_1.generate)({ email }, process.env.SECRET_ACCESS_TOKEN, "15m");
+                //Generates new refresh token and updates users records in the database.
+                if (yield (0, auth_1.verify)(user.jwtrefresh, process.env.SECRET_REFRESH_TOKEN)) {
+                    const jwtRefreshToken = (0, auth_1.generate)({ email }, process.env.SECRET_REFRESH_TOKEN, "30d");
+                    yield (0, userQueries_1.updateUserJwtRefresh)(user.id, jwtRefreshToken);
+                }
+                return res.status(200).json({ message: "Signing in." });
+            }
         }
     }
     catch (error) {
@@ -36,22 +45,24 @@ userRoutes.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 }));
 //Sign Up
-userRoutes.post("/singup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRoutes.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { username, email, password } = req.body;
     const hashPassword = yield (0, encryptDecryptPassword_1.encrypt)(password);
     try {
-        const jwtToken = (0, auth_1.generate)({ email }, "10m");
-        const jwtRefreshToken = (0, auth_1.generate)({ email }, "24h");
+        const jwtToken = (0, auth_1.generate)({ email }, process.env.SECRET_ACCESS_TOKEN, "15");
+        const jwtRefreshToken = (0, auth_1.generate)({ email }, process.env.SECRET_REFRESH_TOKEN, "30d");
+        console.log(jwtRefreshToken);
         yield (0, userQueries_1.insertUser)(username, email, hashPassword.hashedPassword, hashPassword.salt, jwtRefreshToken);
         res.cookie("userAuth", jwtToken, { httpOnly: true });
         res.cookie("userAuthRefresh", jwtRefreshToken, { httpOnly: true });
-        return res.status(201).json({ username, email });
+        return res.status(201).json({ message: "Signing In." });
     }
     catch (error) {
+        console.log(error);
         if (error.code === "23505") {
             return res.status(400).json({ message: "Account already exist." });
         }
-        return res.status(400).json({ message: "Error creating account." });
+        return res.status(500).json({ message: "Error creating account." });
     }
 }));
 exports.default = userRoutes;

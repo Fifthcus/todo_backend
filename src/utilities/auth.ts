@@ -4,6 +4,21 @@ interface UserObj {
     email: string
 }
 
-export const generate = (user: UserObj, ttl: string) => {
-    return jwt.sign(user, process.env.SECRET_ACCESS_TOKEN!, {expiresIn: `${ttl}`});
+export const generate = (user: UserObj, secret_token: string, ttl: string) => {
+    return jwt.sign({...user, iat: Math.floor(Date.now() / 1000)}, secret_token, {expiresIn: `${ttl}`});
+}
+
+export const verify = async (token: string, secret_token: string) => {
+    let isExpired: true | false = false;
+    await jwt.verify(token, secret_token, (err) => {
+        console.log(err);
+        if(err){
+            if(err.message === "jwt expired"){
+                isExpired = true;
+                return isExpired;
+            }
+        }
+    });
+    console.log(isExpired);
+    return isExpired;
 }

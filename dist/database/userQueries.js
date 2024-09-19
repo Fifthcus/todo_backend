@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserByEmail = exports.insertUser = void 0;
+exports.updateUserJwtRefresh = exports.getUserByEmail = exports.insertUser = void 0;
 const pool_1 = __importDefault(require("./pool"));
 /* async function insertUsername(username, password) {
     await db.query("INSERT INTO accounts (username, password) VALUES ($1, $2)", [username, password]);
@@ -23,6 +23,11 @@ const insertUser = (username, email, password, salt, jwtrefresh) => __awaiter(vo
 exports.insertUser = insertUser;
 const getUserByEmail = (email) => __awaiter(void 0, void 0, void 0, function* () {
     const { rows } = yield pool_1.default.query("SELECT * FROM users WHERE email = ($1)", [email]);
+    console.log(rows[0]);
     return rows[0];
 });
 exports.getUserByEmail = getUserByEmail;
+const updateUserJwtRefresh = (id, jwtrefresh) => __awaiter(void 0, void 0, void 0, function* () {
+    yield pool_1.default.query("UPDATE users SET jwtrefresh = ($1) WHERE id = ($2)", [jwtrefresh, id]);
+});
+exports.updateUserJwtRefresh = updateUserJwtRefresh;
