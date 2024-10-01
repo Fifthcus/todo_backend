@@ -18,11 +18,13 @@ userRoutes.post("/signin", async (req, res) => {
             //Compare password with hashed password.
             if(await decrypt(user.password, password, user.salt)){
                 const jwtToken = generate({email}, process.env.SECRET_ACCESS_TOKEN!, "15m");
+                let jwtRefreshToken = user.jwtrefresh;
                 //Generates new refresh token and updates users records in the database.
                 if(await verify(user.jwtrefresh, process.env.SECRET_REFRESH_TOKEN!)){
-                    const jwtRefreshToken = generate({email}, process.env.SECRET_REFRESH_TOKEN!, "30d");
+                    jwtRefreshToken = generate({email}, process.env.SECRET_REFRESH_TOKEN!, "30d");
                     await updateUserJwtRefresh(user.id, jwtRefreshToken);
                 }
+                res.cookie("userAuthRefresh", jwtRefreshToken, {httpOnly: true});
                 return res.status(200).json({message: "Signing in."});
             }
         }

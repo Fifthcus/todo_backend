@@ -30,11 +30,13 @@ userRoutes.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
             //Compare password with hashed password.
             if (yield (0, encryptDecryptPassword_1.decrypt)(user.password, password, user.salt)) {
                 const jwtToken = (0, auth_1.generate)({ email }, process.env.SECRET_ACCESS_TOKEN, "15m");
+                let jwtRefreshToken = user.jwtrefresh;
                 //Generates new refresh token and updates users records in the database.
                 if (yield (0, auth_1.verify)(user.jwtrefresh, process.env.SECRET_REFRESH_TOKEN)) {
-                    const jwtRefreshToken = (0, auth_1.generate)({ email }, process.env.SECRET_REFRESH_TOKEN, "30d");
+                    jwtRefreshToken = (0, auth_1.generate)({ email }, process.env.SECRET_REFRESH_TOKEN, "30d");
                     yield (0, userQueries_1.updateUserJwtRefresh)(user.id, jwtRefreshToken);
                 }
+                res.cookie("userAuthRefresh", jwtRefreshToken, { httpOnly: true });
                 return res.status(200).json({ message: "Signing in." });
             }
         }
