@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 
 //Routes
 import userRoutes from "./routers/userRoutes";
+import apiRoutes from "./routers/apiRoutes";
 
 const app = express();
 
@@ -19,5 +20,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/user", userRoutes);
+app.use("/api/v1", apiRoutes);
 
 app.listen(process.env.PORT, () => console.log(`Server listening on port ${process.env.PORT}`));

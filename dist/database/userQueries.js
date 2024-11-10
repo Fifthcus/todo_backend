@@ -18,12 +18,12 @@ const pool_1 = __importDefault(require("./pool"));
     await db.query("INSERT INTO accounts (username, password) VALUES ($1, $2)", [username, password]);
 } */
 const insertUser = (username, email, password, salt, jwtrefresh) => __awaiter(void 0, void 0, void 0, function* () {
-    yield pool_1.default.query("INSERT INTO users (username, email, password, salt, jwtrefresh) VALUES ($1, $2, $3, $4, $5)", [username, email, password, salt, jwtrefresh]);
+    const newUser = yield pool_1.default.query("INSERT INTO users (username, email, password, salt, jwtrefresh) VALUES ($1, $2, $3, $4, $5)", [username, email, password, salt, jwtrefresh]);
 });
 exports.insertUser = insertUser;
+//For signing in.
 const getUserByEmail = (email) => __awaiter(void 0, void 0, void 0, function* () {
     const { rows } = yield pool_1.default.query("SELECT * FROM users WHERE email = ($1)", [email]);
-    console.log(rows[0]);
     return rows[0];
 });
 exports.getUserByEmail = getUserByEmail;

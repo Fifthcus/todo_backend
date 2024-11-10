@@ -19,6 +19,5 @@ export const verify = async (token: string, secret_token: string) => {
             }
         }
     });
-    console.log(isExpired);
     return isExpired;
 }

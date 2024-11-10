@@ -23,6 +23,7 @@ userRoutes.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
     try {
         //Search for user in database, and if not return error.
         const user = yield (0, userQueries_1.getUserByEmail)(email);
+        const returnedUserObj = { id: user.id, username: user.username, email: user.email };
         if (!user) {
             return res.status(404).json({ message: "Account does not exist." });
         }
@@ -37,7 +38,7 @@ userRoutes.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
                     yield (0, userQueries_1.updateUserJwtRefresh)(user.id, jwtRefreshToken);
                 }
                 res.cookie("userAuthRefresh", jwtRefreshToken, { httpOnly: true });
-                return res.status(200).json({ message: "Signing in." });
+                return res.status(200).json({ message: "Signing in.", returnedUserObj });
             }
         }
     }
@@ -53,11 +54,12 @@ userRoutes.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, funct
     try {
         const jwtToken = (0, auth_1.generate)({ email }, process.env.SECRET_ACCESS_TOKEN, "15");
         const jwtRefreshToken = (0, auth_1.generate)({ email }, process.env.SECRET_REFRESH_TOKEN, "30d");
-        console.log(jwtRefreshToken);
         yield (0, userQueries_1.insertUser)(username, email, hashPassword.hashedPassword, hashPassword.salt, jwtRefreshToken);
+        const user = yield (0, userQueries_1.getUserByEmail)(email);
+        const returnedUserObj = { id: user.id, username: user.username, email: user.email };
         res.cookie("userAuth", jwtToken, { httpOnly: true });
         res.cookie("userAuthRefresh", jwtRefreshToken, { httpOnly: true });
-        return res.status(201).json({ message: "Signing In." });
+        return res.status(201).json({ message: "Signing In.", user: returnedUserObj });
     }
     catch (error) {
         console.log(error);
