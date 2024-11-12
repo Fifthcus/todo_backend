@@ -30,6 +30,7 @@ userRoutes.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
         if (user) {
             //Compare password with hashed password.
             if (yield (0, encryptDecryptPassword_1.decrypt)(user.password, password, user.salt)) {
+                console.log("testing");
                 const jwtToken = (0, auth_1.generate)({ email }, process.env.SECRET_ACCESS_TOKEN, "15m");
                 let jwtRefreshToken = user.jwtrefresh;
                 //Generates new refresh token and updates users records in the database.
@@ -38,13 +39,13 @@ userRoutes.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, funct
                     yield (0, userQueries_1.updateUserJwtRefresh)(user.id, jwtRefreshToken);
                 }
                 res.cookie("userAuthRefresh", jwtRefreshToken, { httpOnly: true });
-                return res.status(200).json({ message: "Signing in.", returnedUserObj });
+                return res.status(200).json({ message: "Signing in.", user: returnedUserObj });
             }
         }
     }
     catch (error) {
         console.error(error);
-        return res.status(500).json({ message: "An unknown error occured." });
+        return res.status(500).json({ message: "An unknown error occurred." });
     }
 }));
 //Sign Up
@@ -59,7 +60,7 @@ userRoutes.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, funct
         const returnedUserObj = { id: user.id, username: user.username, email: user.email };
         res.cookie("userAuth", jwtToken, { httpOnly: true });
         res.cookie("userAuthRefresh", jwtRefreshToken, { httpOnly: true });
-        return res.status(201).json({ message: "Signing In.", user: returnedUserObj });
+        return res.status(201).json({ message: "Account Created.", user: returnedUserObj });
     }
     catch (error) {
         console.log(error);
@@ -69,4 +70,10 @@ userRoutes.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, funct
         return res.status(500).json({ message: "Error creating account." });
     }
 }));
+//Logout
+userRoutes.post("/logout", (req, res) => {
+    res.clearCookie('userAuth');
+    res.clearCookie('userAuthRefresh');
+    res.status(200).json({ message: "Successfully logged out." });
+});
 exports.default = userRoutes;

@@ -18,7 +18,7 @@ const pool_1 = __importDefault(require("./pool"));
     await db.query("INSERT INTO accounts (username, password) VALUES ($1, $2)", [username, password]);
 } */
 const insertUser = (username, email, password, salt, jwtrefresh) => __awaiter(void 0, void 0, void 0, function* () {
-    const newUser = yield pool_1.default.query("INSERT INTO users (username, email, password, salt, jwtrefresh) VALUES ($1, $2, $3, $4, $5)", [username, email, password, salt, jwtrefresh]);
+    yield pool_1.default.query("INSERT INTO users (username, email, password, salt, jwtrefresh) VALUES ($1, $2, $3, $4, $5)", [username, email, password, salt, jwtrefresh]);
 });
 exports.insertUser = insertUser;
 //For signing in.

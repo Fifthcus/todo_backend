@@ -18,6 +18,7 @@ userRoutes.post("/signin", async (req, res) => {
         if(user){
             //Compare password with hashed password.
             if(await decrypt(user.password, password, user.salt)){
+                console.log("testing");
                 const jwtToken = generate({email}, process.env.SECRET_ACCESS_TOKEN!, "15m");
                 let jwtRefreshToken = user.jwtrefresh;
                 //Generates new refresh token and updates users records in the database.
@@ -26,17 +27,16 @@ userRoutes.post("/signin", async (req, res) => {
                     await updateUserJwtRefresh(user.id, jwtRefreshToken);
                 }
                 res.cookie("userAuthRefresh", jwtRefreshToken, {httpOnly: true});
-                return res.status(200).json({message: "Signing in.", returnedUserObj});
+                return res.status(200).json({message: "Signing in.", user: returnedUserObj});
             }
         }
     }catch(error){
         console.error(error);
-        return res.status(500).json({message: "An unknown error occured."});
+        return res.status(500).json({message: "An unknown error occurred."});
     }
 });
 
 //Sign Up
-
 userRoutes.post("/signup", async (req, res) => {
     const {username, email, password} = req.body;
     const hashPassword = await encrypt(password);
@@ -48,7 +48,7 @@ userRoutes.post("/signup", async (req, res) => {
         const returnedUserObj = {id: user.id, username: user.username, email: user.email};
         res.cookie("userAuth", jwtToken, {httpOnly: true});
         res.cookie("userAuthRefresh", jwtRefreshToken, {httpOnly: true});
-        return res.status(201).json({message: "Signing In.", user: returnedUserObj});
+        return res.status(201).json({message: "Account Created.", user: returnedUserObj});
     }catch(error: any){
         console.log(error);
         if(error.code === "23505"){
@@ -56,6 +56,13 @@ userRoutes.post("/signup", async (req, res) => {
         }
         return res.status(500).json({message: "Error creating account."});
     }
+});
+
+//Logout
+userRoutes.post("/logout", (req, res)=> {
+    res.clearCookie('userAuth');
+    res.clearCookie('userAuthRefresh');
+    res.status(200).json({message: "Successfully logged out."});
 });
 
 export default userRoutes;
