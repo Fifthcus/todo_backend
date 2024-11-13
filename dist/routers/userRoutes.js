@@ -17,29 +17,52 @@ const userQueries_1 = require("../database/userQueries");
 const encryptDecryptPassword_1 = require("../utilities/encryptDecryptPassword");
 const auth_1 = require("../utilities/auth");
 const userRoutes = express_1.default.Router();
-//Sign In
-userRoutes.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, password } = req.body;
+const findUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { email } = req.body;
     try {
-        //Search for user in database, and if not return error.
         const user = yield (0, userQueries_1.getUserByEmail)(email);
-        const returnedUserObj = { id: user.id, username: user.username, email: user.email };
-        if (!user) {
-            return res.status(404).json({ message: "Account does not exist." });
-        }
+        if (!user)
+            return res.status(404).json({ message: "Account not found," });
+        req.user = user;
+        next();
+    }
+    catch (error) {
+        next(error);
+    }
+});
+//Checks validity of jwt refresh, and if invalid, generates a new one, and stores in db.
+const isJWTRefreshValid = (req, res, next) => {
+    try {
+        console.log(req);
+        next();
+    }
+    catch (error) {
+        console.error(error);
+        next(error);
+    }
+};
+//Sign In
+userRoutes.post("/signin", findUser, isJWTRefreshValid, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { password } = req.body;
+    const user = req.user;
+    if (!user)
+        return null;
+    const returnUserObjectToFrontend = { id: user.id, username: user.username, email: user.email };
+    try {
         if (user) {
             //Compare password with hashed password.
             if (yield (0, encryptDecryptPassword_1.decrypt)(user.password, password, user.salt)) {
-                console.log("testing");
-                const jwtToken = (0, auth_1.generate)({ email }, process.env.SECRET_ACCESS_TOKEN, "15m");
-                let jwtRefreshToken = user.jwtrefresh;
+                const jwtToken = (0, auth_1.generate)(user.email, process.env.SECRET_ACCESS_TOKEN, "15m");
                 //Generates new refresh token and updates users records in the database.
                 if (yield (0, auth_1.verify)(user.jwtrefresh, process.env.SECRET_REFRESH_TOKEN)) {
-                    jwtRefreshToken = (0, auth_1.generate)({ email }, process.env.SECRET_REFRESH_TOKEN, "30d");
+                    const jwtRefreshToken = (0, auth_1.generate)(user.email, process.env.SECRET_REFRESH_TOKEN, "30d");
                     yield (0, userQueries_1.updateUserJwtRefresh)(user.id, jwtRefreshToken);
                 }
-                res.cookie("userAuthRefresh", jwtRefreshToken, { httpOnly: true });
-                return res.status(200).json({ message: "Signing in.", user: returnedUserObj });
+                res.cookie("userAuth", jwtToken, { httpOnly: true });
+                return res.status(200).json({ message: "Signed in.", user: returnUserObjectToFrontend });
+            }
+            else {
+                res.status(500).json({ message: "Username or password incorreect." });
             }
         }
     }
@@ -53,13 +76,12 @@ userRoutes.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, funct
     const { username, email, password } = req.body;
     const hashPassword = yield (0, encryptDecryptPassword_1.encrypt)(password);
     try {
-        const jwtToken = (0, auth_1.generate)({ email }, process.env.SECRET_ACCESS_TOKEN, "15");
-        const jwtRefreshToken = (0, auth_1.generate)({ email }, process.env.SECRET_REFRESH_TOKEN, "30d");
+        const jwtToken = (0, auth_1.generate)(email, process.env.SECRET_ACCESS_TOKEN, "15");
+        const jwtRefreshToken = (0, auth_1.generate)(email, process.env.SECRET_REFRESH_TOKEN, "30d");
         yield (0, userQueries_1.insertUser)(username, email, hashPassword.hashedPassword, hashPassword.salt, jwtRefreshToken);
         const user = yield (0, userQueries_1.getUserByEmail)(email);
         const returnedUserObj = { id: user.id, username: user.username, email: user.email };
         res.cookie("userAuth", jwtToken, { httpOnly: true });
-        res.cookie("userAuthRefresh", jwtRefreshToken, { httpOnly: true });
         return res.status(201).json({ message: "Account Created.", user: returnedUserObj });
     }
     catch (error) {

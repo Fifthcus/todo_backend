@@ -1,11 +1,7 @@
 import jwt from "jsonwebtoken"
 
-interface UserObj {
-    email: string
-}
-
-export const generate = (user: UserObj, secret_token: string, ttl: string) => {
-    return jwt.sign({...user, iat: Math.floor(Date.now() / 1000)}, secret_token, {expiresIn: `${ttl}`});
+export const generate = (email: string, secret_token: string, ttl: string) => {
+    return jwt.sign({email, iat: Math.floor(Date.now() / 1000)}, secret_token, {expiresIn: `${ttl}`});
 }
 
 export const verify = async (token: string, secret_token: string) => {
