@@ -7,7 +7,6 @@ export const generate = (email: string, secret_token: string, ttl: string) => {
 export const verify = async (token: string, secret_token: string) => {
     let isExpired: true | false = false;
     await jwt.verify(token, secret_token, (err) => {
-        console.log(err);
         if(err){
             if(err.message === "jwt expired"){
                 isExpired = true;

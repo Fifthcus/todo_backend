@@ -20,7 +20,6 @@ const findUser = async (req: Request, res: Response, next: NextFunction) => {
 //Checks validity of jwt refresh, and if invalid, generates a new one, and stores in db.
 const isJWTRefreshValid = (req: Request, res: Response, next: NextFunction) => {
     try {
-        console.log(req);
         next();
     } catch(error) {
         console.error(error);
@@ -78,7 +77,7 @@ userRoutes.post("/signup", async (req, res) => {
 });
 
 //Logout
-userRoutes.post("/logout", (req, res)=> {
+userRoutes.post("/logout", (req, res) => {
     res.clearCookie('userAuth');
     res.clearCookie('userAuthRefresh');
     res.status(200).json({ message: "Successfully logged out." });

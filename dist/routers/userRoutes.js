@@ -33,7 +33,6 @@ const findUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
 //Checks validity of jwt refresh, and if invalid, generates a new one, and stores in db.
 const isJWTRefreshValid = (req, res, next) => {
     try {
-        console.log(req);
         next();
     }
     catch (error) {
