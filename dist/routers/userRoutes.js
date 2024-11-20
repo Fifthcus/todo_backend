@@ -16,46 +16,11 @@ const express_1 = __importDefault(require("express"));
 const userQueries_1 = require("../database/userQueries");
 const encryptDecryptPassword_1 = require("../utilities/encryptDecryptPassword");
 const auth_1 = require("../utilities/auth");
+const isJWTValid_1 = __importDefault(require("../middlewares/isJWTValid"));
+const findUser_1 = __importDefault(require("../middlewares/findUser"));
 const userRoutes = express_1.default.Router();
-const findUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email } = req.body;
-    try {
-        const user = yield (0, userQueries_1.getUserByEmail)(email);
-        if (!user)
-            return res.status(404).json({ message: "Account not found," });
-        req.user = user;
-        next();
-    }
-    catch (error) {
-        next(error);
-    }
-});
-//Checks validity of jwt refresh, and if invalid, generates a new one, and stores in db.
-const isJWTRefreshValid = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const userAuth = req.cookies.userAuth;
-        console.log(userAuth);
-        if (userAuth === undefined) {
-            console.log(12345);
-            res.status(401);
-        }
-        ;
-        if (!(yield (0, auth_1.verify)(userAuth, process.env.SECRET_ACCESS_TOKEN))) {
-            const email = (0, auth_1.fetchClaims)(userAuth);
-            req.body.email = email;
-            next();
-        }
-        else {
-            res.status(401);
-        }
-    }
-    catch (error) {
-        console.error(error);
-        next(error);
-    }
-});
 //Persist user login
-userRoutes.post("/persist", isJWTRefreshValid, findUser, (req, res) => {
+userRoutes.post("/persist", isJWTValid_1.default, findUser_1.default, (req, res) => {
     const user = req.user;
     if (!user)
         return null;
@@ -63,7 +28,7 @@ userRoutes.post("/persist", isJWTRefreshValid, findUser, (req, res) => {
     res.status(200).json({ user: returnUserObjectToFrontend });
 });
 //Sign In
-userRoutes.post("/signin", findUser, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRoutes.post("/signin", findUser_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { password } = req.body;
     const user = req.user;
     if (!user)

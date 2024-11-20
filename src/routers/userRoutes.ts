@@ -1,51 +1,17 @@
-import express, { Request, Response, NextFunction } from "express";
-import {getUserByEmail, insertUser, updateUserJwtRefresh} from "../database/userQueries"
-import {encrypt, decrypt} from "../utilities/encryptDecryptPassword"
-import {generate, verify, fetchClaims} from "../utilities/auth"
-
-import jwt from "jsonwebtoken"
+import express, { Request, Response } from "express";
+import { getUserByEmail, insertUser, updateUserJwtRefresh } from "../database/userQueries";
+import { encrypt, decrypt } from "../utilities/encryptDecryptPassword";
+import { generate, verify } from "../utilities/auth";
+import isJWTValid from "../middlewares/isJWTValid";
+import findUser from "../middlewares/findUser";
 
 const userRoutes = express.Router();
 
-const findUser = async (req: Request, res: Response, next: NextFunction) => {
-    const { email } = req.body;
-    try {
-        const user = await getUserByEmail(email);
-        if(!user) return res.status(404).json({ message: "Account not found," });
-        req.user = user;
-        next();
-    } catch(error) {
-        next(error);
-    }
-}
-
-//Checks validity of jwt refresh, and if invalid, generates a new one, and stores in db.
-const isJWTRefreshValid = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const userAuth = req.cookies.userAuth;
-        console.log(userAuth);
-        if(userAuth === undefined) {
-            console.log(12345);
-            res.status(401);
-        };
-        if(!await verify(userAuth, process.env.SECRET_ACCESS_TOKEN!)){
-            const email = fetchClaims(userAuth);
-            req.body.email = email;
-            next();
-        } else {
-            res.status(401);
-        }
-    } catch(error) {
-        console.error(error);
-        next(error);
-    }
-}
-
 //Persist user login
-userRoutes.post("/persist", isJWTRefreshValid, findUser, (req: Request, res: Response) => {
+userRoutes.post("/persist", isJWTValid, findUser, (req: Request, res: Response) => {
     const user = req.user;
     if(!user) return null;
-    const returnUserObjectToFrontend = {id: user.id, username: user.username, email: user.email};
+    const returnUserObjectToFrontend = { id: user.id, username: user.username, email: user.email };
     res.status(200).json({ user: returnUserObjectToFrontend });
 });
 
