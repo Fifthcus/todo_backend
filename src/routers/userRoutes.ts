@@ -1,7 +1,9 @@
 import express, { Request, Response, NextFunction } from "express";
 import {getUserByEmail, insertUser, updateUserJwtRefresh} from "../database/userQueries"
 import {encrypt, decrypt} from "../utilities/encryptDecryptPassword"
-import {generate, verify} from "../utilities/auth"
+import {generate, verify, fetchClaims} from "../utilities/auth"
+
+import jwt from "jsonwebtoken"
 
 const userRoutes = express.Router();
 
@@ -18,17 +20,37 @@ const findUser = async (req: Request, res: Response, next: NextFunction) => {
 }
 
 //Checks validity of jwt refresh, and if invalid, generates a new one, and stores in db.
-const isJWTRefreshValid = (req: Request, res: Response, next: NextFunction) => {
+const isJWTRefreshValid = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        next();
+        const userAuth = req.cookies.userAuth;
+        console.log(userAuth);
+        if(userAuth === undefined) {
+            console.log(12345);
+            res.status(401);
+        };
+        if(!await verify(userAuth, process.env.SECRET_ACCESS_TOKEN!)){
+            const email = fetchClaims(userAuth);
+            req.body.email = email;
+            next();
+        } else {
+            res.status(401);
+        }
     } catch(error) {
         console.error(error);
         next(error);
     }
 }
 
+//Persist user login
+userRoutes.post("/persist", isJWTRefreshValid, findUser, (req: Request, res: Response) => {
+    const user = req.user;
+    if(!user) return null;
+    const returnUserObjectToFrontend = {id: user.id, username: user.username, email: user.email};
+    res.status(200).json({ user: returnUserObjectToFrontend });
+});
+
 //Sign In
-userRoutes.post("/signin", findUser, isJWTRefreshValid, async (req, res) => {
+userRoutes.post("/signin", findUser, async (req, res) => {
     const { password } = req.body;
     const user = req.user;
     if(!user) return null;

@@ -31,17 +31,39 @@ const findUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 //Checks validity of jwt refresh, and if invalid, generates a new one, and stores in db.
-const isJWTRefreshValid = (req, res, next) => {
+const isJWTRefreshValid = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        next();
+        const userAuth = req.cookies.userAuth;
+        console.log(userAuth);
+        if (userAuth === undefined) {
+            console.log(12345);
+            res.status(401);
+        }
+        ;
+        if (!(yield (0, auth_1.verify)(userAuth, process.env.SECRET_ACCESS_TOKEN))) {
+            const email = (0, auth_1.fetchClaims)(userAuth);
+            req.body.email = email;
+            next();
+        }
+        else {
+            res.status(401);
+        }
     }
     catch (error) {
         console.error(error);
         next(error);
     }
-};
+});
+//Persist user login
+userRoutes.post("/persist", isJWTRefreshValid, findUser, (req, res) => {
+    const user = req.user;
+    if (!user)
+        return null;
+    const returnUserObjectToFrontend = { id: user.id, username: user.username, email: user.email };
+    res.status(200).json({ user: returnUserObjectToFrontend });
+});
 //Sign In
-userRoutes.post("/signin", findUser, isJWTRefreshValid, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+userRoutes.post("/signin", findUser, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { password } = req.body;
     const user = req.user;
     if (!user)
