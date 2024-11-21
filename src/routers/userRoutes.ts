@@ -20,7 +20,7 @@ userRoutes.post("/signin", findUser, async (req, res) => {
     const { password } = req.body;
     const user = req.user;
     if(!user) return null;
-    const returnUserObjectToFrontend = {id: user.id, username: user.username, email: user.email};
+    const returnUserObjectToFrontend = { id: user.id, username: user.username, email: user.email };
     try{
         if(user){
             //Compare password with hashed password.
@@ -31,8 +31,8 @@ userRoutes.post("/signin", findUser, async (req, res) => {
                     const jwtRefreshToken = generate(user.email, process.env.SECRET_REFRESH_TOKEN!, "30d");
                     await updateUserJwtRefresh(user.id, jwtRefreshToken);
                 }
-                res.cookie("userAuth", jwtToken, {httpOnly: true});
-                return res.status(200).json({message: "Signed in.", user: returnUserObjectToFrontend});
+                res.cookie("userAuth", jwtToken, { httpOnly: true });
+                return res.status(200).json({ message: "Signed in.", user: returnUserObjectToFrontend });
             } else {
                 res.status(500).json({ message: "Username or password incorreect." });
             }

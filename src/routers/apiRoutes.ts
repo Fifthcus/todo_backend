@@ -1,4 +1,5 @@
 import express from "express";
+import isJWTValid from "../middlewares/isJWTValid";
 import { findUsersList, addTaskToDB, deleteTaskFromDB, updateTaskToDB, updateStatusToDB } from "../database/apiQueries"
 
 const apiRoutes = express.Router();
@@ -12,7 +13,7 @@ interface TaskObject {
 }
 
 //Fetch entire list.
-apiRoutes.get("/list/:id", async (req, res) => {
+apiRoutes.get("/list/:id", isJWTValid, async (req, res) => {
     const { id } = req.params;
     try {
         const list = await findUsersList(id);
@@ -22,7 +23,7 @@ apiRoutes.get("/list/:id", async (req, res) => {
     }
 });
 //Add task.
-apiRoutes.post("/list/task", async (req, res) => {
+apiRoutes.post("/list/task", isJWTValid, async (req, res) => {
     const { user, iscompleted, task } = <TaskObject>req.body;
     try {
         await addTaskToDB(user.id, iscompleted, task);
@@ -33,7 +34,7 @@ apiRoutes.post("/list/task", async (req, res) => {
     }
 });
 //Update task
-apiRoutes.put("/list/task/:id", async (req, res) => {
+apiRoutes.put("/list/task/:id", isJWTValid, async (req, res) => {
     const { id } = req.params;
     const { task, whatIsBeingUpdated } = req.body;
     try {
@@ -48,7 +49,7 @@ apiRoutes.put("/list/task/:id", async (req, res) => {
     }
 })
 //Delete a task
-apiRoutes.delete("/list/task/:id", async (req, res) => {
+apiRoutes.delete("/list/task/:id", isJWTValid, async (req, res) => {
     const { id } = req.params;
     await deleteTaskFromDB(id);
     res.status(200).json({ message: "Task deleted." });
