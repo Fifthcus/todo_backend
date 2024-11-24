@@ -14,6 +14,7 @@ userRoutes.post("/persist", isJWTValid, findUser, (req: Request, res: Response) 
     const returnUserObjectToFrontend = { id: user.id, username: user.username, email: user.email };
     res.status(200).json({ user: returnUserObjectToFrontend });
 });
+//Prevent user from being signed out while using app
 
 //Sign In
 userRoutes.post("/signin", findUser, async (req, res) => {
